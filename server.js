@@ -19,7 +19,12 @@ const PORT = process.env.PORT || 3000;
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
-  dialectOptions: process.env.DATABASE_URL.includes('sslmode=require') ? { ssl: { require: true, rejectUnauthorized: false } } : {}
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  }
 });
 
 const User = sequelize.define('User', {
