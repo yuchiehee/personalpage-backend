@@ -8,6 +8,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -49,6 +50,11 @@ app.use(session({
 
 app.use(express.static(path.join(__dirname, '../personalpage-gh-pages')));
 app.use('/avatars', express.static(path.join(__dirname, 'avatars')));
+
+app.use(cors({
+  origin: 'https://yuchiehee.github.io',
+  credentials: true
+}));
 
 if (!fs.existsSync('./avatars')) {
   fs.mkdirSync('./avatars');
