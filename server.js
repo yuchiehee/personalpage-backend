@@ -92,7 +92,6 @@ app.post('/api/users', async (req, res) => {
 });
 
 app.get('/api/users', async (req, res) => {
-  if (!req.session.userId) return res.status(403).json({ error: 'Not logged in' });
   const users = await User.findAll({ attributes: ['id', 'username', 'avatarUrl'] });
   res.json(users);
 });
