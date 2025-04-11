@@ -122,8 +122,12 @@ app.post('/login', async (req, res) => {
     const result = await pool.query('SELECT * FROM users WHERE username=$1 AND password=$2', [username, password]);
     if (result.rows.length > 0) {
       req.session.user = result.rows[0];
-      console.log('✅ 登入成功，session.user:', req.session.user);
-      res.json({ success: true });
+
+      // ✅ 強制儲存 session，才會送出 Set-Cookie
+      req.session.save(() => {
+        console.log('✅ 登入成功，session 已儲存');
+        res.json({ success: true });
+      });
     } else {
       res.json({ success: false, message: '帳號或密碼錯誤' });
     }
