@@ -28,6 +28,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+app.set('trust proxy', 1); // ⭐⭐ 告訴 Express：「我後面有反向代理，請當作 HTTPS」
+
 app.use(session({
   secret: 'secretKey',
   resave: false,
