@@ -46,16 +46,29 @@ const upload = multer({
 });
 
 // === Routes ===
-app.post('/register', async (req, res) => {
+app.post('/register', upload.single('avatar'), async (req, res) => {
   const { username, password } = req.body;
+  const avatarFile = req.file;
+
+  if (!username || !password || !avatarFile) {
+    return res.status(400).json({ success: false, message: '缺少欄位' });
+  }
+
+  const filePath = `/uploads/${avatarFile.filename}`;
+
   try {
-    const result = await pool.query('INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *', [username, password]);
+    const result = await pool.query(
+      'INSERT INTO users (username, password, avatar) VALUES ($1, $2, $3) RETURNING *',
+      [username, password, filePath]
+    );
+
     req.session.user = result.rows[0];
-    res.json({ success: true });
+    res.json({ success: true, user: result.rows[0] });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
