@@ -134,7 +134,7 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/me', (req, res) => {
-  console.log('🧠 session:', req.session);
+  console.log('🧠 session:', req.session.user);
   if (req.session.user) {
     res.json({ loggedIn: true, user: req.session.user });
   } else {
