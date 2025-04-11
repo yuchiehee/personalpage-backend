@@ -122,11 +122,13 @@ app.post('/login', async (req, res) => {
     const result = await pool.query('SELECT * FROM users WHERE username=$1 AND password=$2', [username, password]);
     if (result.rows.length > 0) {
       req.session.user = result.rows[0];
+      console.log('✅ 登入成功，session.user:', req.session.user);
       res.json({ success: true });
     } else {
-      res.json({ success: false });
+      res.json({ success: false, message: '帳號或密碼錯誤' });
     }
   } catch (err) {
+    console.error('❌ 登入錯誤:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
