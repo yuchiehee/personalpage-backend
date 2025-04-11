@@ -12,7 +12,18 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // === Middleware ===
-app.use(cors({ origin: 'https://yuchiehee.github.io', credentials: true }));
+app.use(cors({
+  origin: 'https://yuchiehee.github.io',
+  credentials: true,
+  methods: ['GET', 'POST', 'DELETE'],
+  optionsSuccessStatus: 200
+}));
+
+app.options('*', cors({
+  origin: 'https://yuchiehee.github.io',
+  credentials: true
+}));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
