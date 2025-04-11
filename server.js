@@ -17,14 +17,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(
-  session({
-    secret: 'secretKey',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: false },
-  })
-);
+app.use(session({
+  secret: 'secretKey',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: true,              
+    sameSite: 'none'            
+  }
+}));
+
 
 // === PostgreSQL DB ===
 const pool = new Pool({
