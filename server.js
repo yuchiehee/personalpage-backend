@@ -40,6 +40,31 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
+// 啟動時自動建立資料表（users / comments）
+async function initDatabase() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        avatar TEXT
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        content TEXT NOT NULL
+      );
+    `);
+    console.log('✅ 資料表初始化完成');
+  } catch (err) {
+    console.error('❌ 資料表初始化失敗：', err.message);
+  }
+}
+
+
 // === Multer for image upload ===
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -52,6 +77,8 @@ const upload = multer({
     cb(null, allowedTypes.includes(file.mimetype));
   },
 });
+
+
 
 // === Routes ===
 app.post('/register', upload.single('avatar'), async (req, res) => {
@@ -149,4 +176,8 @@ app.delete('/comment/:id', async (req, res) => {
   }
 });
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
+initDatabase().then(() => {
+  app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
+});
+
+
