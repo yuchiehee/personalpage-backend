@@ -89,34 +89,35 @@ async function initDatabase() {
 // === Routes ===
 app.post('/register', upload.single('avatar'), async (req, res) => {
   const { username, password } = req.body;
-  const avatarFile = req.file;
+  const file = req.file;
 
-  if (!username || !password || !avatarFile) {
+  if (!username || !password || !file) {
     return res.status(400).json({ success: false, message: '缺少欄位' });
   }
 
   try {
-    // 上傳到 Cloudinary
-    const uploadResult = await cloudinary.uploader.upload_stream(
+    // 建立上傳 stream
+    const stream = cloudinary.uploader.upload_stream(
       { folder: 'avatars', resource_type: 'image' },
       async (error, result) => {
         if (error) return res.status(500).json({ success: false, error: error.message });
 
         const avatarUrl = result.secure_url;
 
-        // 寫入資料庫
         const dbRes = await pool.query(
           'INSERT INTO users (username, password, avatar) VALUES ($1, $2, $3) RETURNING *',
           [username, password, avatarUrl]
         );
 
-        req.session.user = result.rows[0];
-        res.json({ success: true, user: result.rows[0] });
+        req.session.user = dbRes.rows[0];
+        res.json({ success: true, user: dbRes.rows[0] });
+      }
+    );
 
-        // 寫入 buffer
-        uploadResult.end(file.buffer);
-        
-  )} catch (err) {
+    // 傳入檔案內容
+    stream.end(file.buffer);
+
+  } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
