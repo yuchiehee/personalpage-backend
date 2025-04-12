@@ -21,12 +21,24 @@ cloudinary.config({
 });
 
 // === Middleware ===
+const allowedOrigins = [
+  'https://yuchiehee.github.io',
+  'https://yuchieh-midterm.connor1999.com'
+];
+
 app.use(cors({
-  origin: 'https://yuchiehee.github.io',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'DELETE'],
   optionsSuccessStatus: 200
 }));
+
 
 app.options('*', cors({
   origin: 'https://yuchiehee.github.io',
