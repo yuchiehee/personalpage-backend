@@ -1,7 +1,6 @@
 // server.js
 const express = require('express');
 const session = require('express-session');
-const multer = require('multer');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -10,6 +9,16 @@ const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
+const upload = multer();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 // === Middleware ===
 app.use(cors({
@@ -77,22 +86,6 @@ async function initDatabase() {
   }
 }
 
-
-// === Multer for image upload ===
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)),
-});
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png'];
-    cb(null, allowedTypes.includes(file.mimetype));
-  },
-});
-
-
-
 // === Routes ===
 app.post('/register', upload.single('avatar'), async (req, res) => {
   const { username, password } = req.body;
@@ -102,16 +95,27 @@ app.post('/register', upload.single('avatar'), async (req, res) => {
     return res.status(400).json({ success: false, message: '缺少欄位' });
   }
 
-  const filePath = `/uploads/${avatarFile.filename}`;
-
   try {
-    const result = await pool.query(
-      'INSERT INTO users (username, password, avatar) VALUES ($1, $2, $3) RETURNING *',
-      [username, password, filePath]
-    );
+    // 上傳到 Cloudinary
+    const uploadResult = await cloudinary.uploader.upload_stream(
+      { folder: 'avatars', resource_type: 'image' },
+      async (error, result) => {
+        if (error) return res.status(500).json({ success: false, error: error.message });
 
-    req.session.user = result.rows[0];
-    res.json({ success: true, user: result.rows[0] });
+        const avatarUrl = result.secure_url;
+
+        // 寫入資料庫
+        const dbRes = await pool.query(
+          'INSERT INTO users (username, password, avatar) VALUES ($1, $2, $3) RETURNING *',
+          [username, password, avatarUrl]
+        );
+
+        req.session.user = result.rows[0];
+        res.json({ success: true, user: result.rows[0] });
+
+        // 寫入 buffer
+        uploadResult.end(file.buffer);
+        
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
