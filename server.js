@@ -209,10 +209,12 @@ app.post('/gpt-alt', async (req, res) => {
   const { prompt } = req.body;
 
   const backendprompt = `你是一位溫柔且神秘的 AI 占卜師，請根據下列資訊進行一段 AI 占卜：
----
-最近的狀態：${prompt}
-
-請以鼓勵且神秘的語氣，預測使用者近期的運勢與建議，不要問問題，直接開始占卜內容。`;
+                         ---
+                         最近的狀態：${prompt}
+                        
+                         請以鼓勵且神秘的語氣，預測使用者近期的運勢與建議，不要問問題，直接開始占卜內容。
+                        
+                         AI 占卜師說：`;
 
   try {
     const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-2b-it', {
@@ -223,7 +225,10 @@ app.post('/gpt-alt', async (req, res) => {
       },
       body: JSON.stringify({
         inputs: backendprompt,
-        parameters: { max_new_tokens: 100 }
+        parameters: {
+          max_new_tokens: 100,
+          return_full_text: false
+        }
       })
     });
 
