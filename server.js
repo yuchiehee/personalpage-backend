@@ -208,37 +208,36 @@ initDatabase().then(() => {
 app.post('/gpt-alt', async (req, res) => {
   const { prompt } = req.body;
 
+  const backendprompt = `你是一位溫柔且神秘的 AI 占卜師，請根據下列資訊進行一段 AI 占卜：
+---
+最近的狀態：${prompt}
+
+請以鼓勵且神秘的語氣，預測使用者近期的運勢與建議，不要問問題，直接開始占卜內容。`;
+
   try {
-    const response = await fetch(
-      'https://api-inference.huggingface.co/models/google/gemma-7b-it',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.HF_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: { max_new_tokens: 100 }
-        })
-      }
-    );
+    const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-2b-it', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.HF_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        inputs: backendprompt,
+        parameters: { max_new_tokens: 100 }
+      })
+    });
 
     const data = await response.json();
-    console.log('[Gemma 回傳]', data);
 
-    // 自動處理不同格式的回傳資料
-    if (Array.isArray(data)) {
-      res.json({ success: true, result: data[0]?.generated_text || '[沒抓到文字]' });
-    } else if (typeof data === 'object' && data.generated_text) {
-      res.json({ success: true, result: data.generated_text });
-    } else if (data.error) {
-      res.json({ success: false, result: '[模型忙碌 / 錯誤]：' + data.error });
-    } else {
-      res.json({ success: false, result: '[HuggingFace 無回應]' });
-    }
+    const result = Array.isArray(data)
+      ? data[0]?.generated_text
+      : data.generated_text || '[占卜失敗]';
+
+    res.json({ success: true, result });
+
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
