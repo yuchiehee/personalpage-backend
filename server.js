@@ -210,7 +210,7 @@ app.post('/gpt-alt', async (req, res) => {
 
   try {
     const response = await fetch(
-      'https://api-inference.huggingface.co/models/meta-llama/Llama-2-7b-chat-hf',
+      'https://api-inference.huggingface.co/models/google/gemma-7b-it',
       {
         method: 'POST',
         headers: {
@@ -225,9 +225,15 @@ app.post('/gpt-alt', async (req, res) => {
     );
 
     const data = await response.json();
+    console.log('[Gemma 回傳]', data);
 
-    if (Array.isArray(data) && data[0]?.generated_text) {
-      res.json({ success: true, result: data[0].generated_text });
+    // 自動處理不同格式的回傳資料
+    if (Array.isArray(data)) {
+      res.json({ success: true, result: data[0]?.generated_text || '[沒抓到文字]' });
+    } else if (typeof data === 'object' && data.generated_text) {
+      res.json({ success: true, result: data.generated_text });
+    } else if (data.error) {
+      res.json({ success: false, result: '[模型忙碌 / 錯誤]：' + data.error });
     } else {
       res.json({ success: false, result: '[HuggingFace 無回應]' });
     }
