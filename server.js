@@ -207,6 +207,7 @@ initDatabase().then(() => {
 
 app.post('/gpt-alt', async (req, res) => {
   const { prompt } = req.body;
+  console.log('收到 prompt：', prompt);
 
   const backendprompt = `你是一位溫柔且神秘的 AI 占卜師，請根據下列資訊進行一段 AI 占卜：
                          ---
@@ -241,6 +242,7 @@ app.post('/gpt-alt', async (req, res) => {
     res.json({ success: true, result });
 
   } catch (err) {
+    console.error('❌ Hugging Face API 錯誤：', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
