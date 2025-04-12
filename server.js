@@ -116,7 +116,7 @@ app.post('/register', upload.single('avatar'), async (req, res) => {
         // 寫入 buffer
         uploadResult.end(file.buffer);
         
-  } catch (err) {
+  )} catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
