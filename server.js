@@ -226,7 +226,7 @@ app.post('/gpt-alt', async (req, res) => {
       body: JSON.stringify({
         inputs: backendprompt,
         parameters: {
-          max_new_tokens: 100,
+          max_new_tokens: 300,
           return_full_text: false
         }
       })
