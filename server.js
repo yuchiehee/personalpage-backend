@@ -117,16 +117,22 @@ app.post('/register', upload.single('avatar'), async (req, res) => {
   const { username, password } = req.body;
   const file = req.file;
 
+  console.log('[Debug] username:', username);
+  console.log('[Debug] password:', password);
+  console.log('[Debug] file:', file?.originalname, file?.mimetype);
+
   if (!username || !password || !file) {
     return res.status(400).json({ success: false, message: '缺少欄位' });
   }
 
   try {
-    // ✅ 改用 promise 版本，不要 callback
-    const result = await cloudinary.uploader.upload_stream_promise({
-      folder: 'avatars',
-      resource_type: 'image'
-    }, file.buffer); // <-- 我們需要先包一個 Promise
+    const result = await cloudinary.uploader.upload_stream_promise(
+      {
+        folder: 'avatars',
+        resource_type: 'image'
+      },
+      file.buffer
+    );
 
     const avatarUrl = result.secure_url;
 
