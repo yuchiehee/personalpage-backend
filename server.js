@@ -21,6 +21,17 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+cloudinary.uploader.upload_stream_promise = function(options, buffer) {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+    stream.end(buffer);
+  });
+};
+
+
 // === Middleware ===
 const allowedOrigins = [
   'https://yuchiehee.github.io',
@@ -111,32 +122,32 @@ app.post('/register', upload.single('avatar'), async (req, res) => {
   }
 
   try {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: 'avatars', resource_type: 'image' },
-      async (error, result) => {
-        if (error) return res.status(500).json({ success: false, error: error.message });
+    // ✅ 改用 promise 版本，不要 callback
+    const result = await cloudinary.uploader.upload_stream_promise({
+      folder: 'avatars',
+      resource_type: 'image'
+    }, file.buffer); // <-- 我們需要先包一個 Promise
 
-        const avatarUrl = result.secure_url;
+    const avatarUrl = result.secure_url;
 
-        const dbRes = await pool.query(
-          'INSERT INTO users (username, password, avatar) VALUES ($1, $2, $3) RETURNING *',
-          [username, password, avatarUrl]
-        );
-
-        req.session.user = dbRes.rows[0];
-        req.session.csrfToken = crypto.randomUUID();
-
-        req.session.save(() => {
-          res.json({ success: true, user: dbRes.rows[0], csrfToken: req.session.csrfToken });
-        });
-      }
+    const dbRes = await pool.query(
+      'INSERT INTO users (username, password, avatar) VALUES ($1, $2, $3) RETURNING *',
+      [username, password, avatarUrl]
     );
 
-    stream.end(file.buffer);
+    req.session.user = dbRes.rows[0];
+    req.session.csrfToken = crypto.randomUUID();
+
+    req.session.save(() => {
+      res.json({ success: true, user: dbRes.rows[0], csrfToken: req.session.csrfToken });
+    });
+
   } catch (err) {
+    console.error('❌ 註冊錯誤:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
