@@ -237,7 +237,7 @@ app.post('/gpt-alt', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'mistralai/mistral-7b-instruct:free',
+        model: 'qwen/qwen-2.5-72b-instruct:free',
         messages: [
           { role: 'system', content: systemPrompt.trim() },
           { role: 'user', content: `最近的狀態是：「${prompt}」` }
