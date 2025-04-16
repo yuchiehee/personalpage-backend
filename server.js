@@ -223,67 +223,39 @@ app.post('/gpt-alt', async (req, res) => {
   const { prompt } = req.body;
   console.log('收到 prompt：', prompt);
 
-  const backendprompt = `
-  你是一位神秘且溫柔的 AI 占卜師。
-  
-  請針對使用者提供的情緒狀態給出：
-  1. 一句鼓勵性的話語（富有詩意）
-  2. 一段神秘的占卜建議（未來預測）
-  
-  狀態描述：${prompt}
-  
-  請直接開始，不要重複問題或指令，不要加註前綴語。
-  `.trim();
-
+  const systemPrompt = `
+你是一位溫柔且神秘的 AI 占卜師，擅長觀察人們的情緒並給出鼓舞人心的預測。
+請你使用詩意、鼓勵且神秘的語氣，針對「最近的狀態」占卜。
+請不要問問題，請直接開始占卜內容。
+`;
 
   try {
-    const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-rw-1b', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${process.env.HF_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        inputs: backendprompt,
-        parameters: {
-          max_new_tokens: 300,
-          return_full_text: false
-        }
+        model: 'meta-llama/llama-3-8b-instruct',
+        messages: [
+          { role: 'system', content: systemPrompt.trim() },
+          { role: 'user', content: `最近的狀態是：「${prompt}」` }
+        ],
+        max_tokens: 300,
+        temperature: 0.9
       })
     });
 
-    const rawText = await response.text();
-    console.log('🧪 Hugging Face 原始回傳：', rawText.slice(0, 300));
+    const data = await response.json();
+    console.log('🧪 LLaMA 回傳前 300 字：', JSON.stringify(data).slice(0, 300));
 
-    // 嘗試解析成 JSON
-    let data;
-    try {
-      data = JSON.parse(rawText);
-    } catch (err) {
-      console.error('❌ 回傳不是 JSON：', rawText);
-      return res.json({ success: false, result: '📡 模型回傳異常，請稍候再試。' });
-    }
-
-    // 處理模型忙碌錯誤
-    if (data.error?.includes('Model too busy')) {
-      console.warn('⚠️ 模型忙碌中');
-      return res.json({ success: false, result: '📡 模型忙碌中，請稍候再試。' });
-    }
-
-    // 擷取內容
-    const fullText = Array.isArray(data) ? data[0]?.generated_text : data.generated_text;
-    let result = '[占卜失敗]';
-    if (fullText) {
-      result = fullText.includes('<|assistant|>')
-        ? fullText.split('<|assistant|>')[1].trim()
-        : fullText.trim();
-    }
-
+    const result = data?.choices?.[0]?.message?.content || '[占卜失敗]';
     res.json({ success: true, result });
 
   } catch (err) {
-    console.error('❌ Hugging Face API 錯誤：', err);
-    res.status(500).json({ success: false, result: '⚠️ 無法連接占卜模型，請稍後再試。' });
+    console.error('❌ OpenRouter API 錯誤：', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
