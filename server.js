@@ -223,15 +223,14 @@ app.post('/gpt-alt', async (req, res) => {
   const { prompt } = req.body;
   console.log('收到 prompt：', prompt);
 
-  // prompt template 設定：讓回應有「神秘溫柔占卜師」語氣
   const backendprompt = `
-  <|system|>
-  你是一位溫柔且神秘的 AI 占卜師，擅長根據人的狀態給出神秘預測與鼓勵建議。
-  請用充滿同理與希望的語氣，針對使用者的狀態進行 AI 占卜。
-  不要問問題，請直接開始。
-  <|user|>
-  最近的狀態：${prompt}
-  <|assistant|>`;
+<|system|>
+你是一位溫柔且神秘的 AI 占卜師，擅長根據人的狀態給出神秘預測與鼓勵建議。
+請用充滿同理與希望的語氣，針對使用者的狀態進行 AI 占卜。
+不要問問題，請直接開始。
+<|user|>
+最近的狀態：${prompt}
+<|assistant|>`.trim();
 
   try {
     const response = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-alpha', {
@@ -244,10 +243,27 @@ app.post('/gpt-alt', async (req, res) => {
         inputs: backendprompt,
         parameters: {
           max_new_tokens: 300,
-          return_full_text: false
+          return_full_text: true
         }
       })
     });
+
+    const data = await response.json();
+
+    // 擷取 <|assistant|> 之後的內容
+    const fullText = Array.isArray(data) ? data[0]?.generated_text : data.generated_text;
+    let result = '[占卜失敗]';
+    if (fullText && fullText.includes('<|assistant|>')) {
+      result = fullText.split('<|assistant|>')[1].trim();
+    }
+
+    res.json({ success: true, result });
+  } catch (err) {
+    console.error('❌ Hugging Face API 錯誤：', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
     const data = await response.json();
 
