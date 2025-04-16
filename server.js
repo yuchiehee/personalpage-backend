@@ -225,10 +225,15 @@ app.post('/gpt-alt', async (req, res) => {
 
   const backendprompt = `
   你是一位神秘且溫柔的 AI 占卜師。
-  請根據「最近的狀態：${prompt}」進行占卜，給予鼓勵的預測與建議。
-  請用詩意又神祕的語氣回答，不要問問題。
-  AI 占卜師說：`.trim();
-
+  
+  請針對使用者提供的情緒狀態給出：
+  1. 一句鼓勵性的話語（富有詩意）
+  2. 一段神秘的占卜建議（未來預測）
+  
+  狀態描述：${prompt}
+  
+  請直接開始，不要重複問題或指令，不要加註前綴語。
+  `.trim();
 
 
   try {
@@ -242,7 +247,7 @@ app.post('/gpt-alt', async (req, res) => {
         inputs: backendprompt,
         parameters: {
           max_new_tokens: 300,
-          return_full_text: true
+          return_full_text: false
         }
       })
     });
