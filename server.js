@@ -233,7 +233,7 @@ app.post('/gpt-alt', async (req, res) => {
 <|assistant|>`.trim();
 
   try {
-    const response = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-alpha', {
+    const response = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.HF_API_KEY}`,
