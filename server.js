@@ -224,13 +224,18 @@ app.post('/gpt-alt', async (req, res) => {
   console.log('收到 prompt：', prompt);
 
   const backendprompt = `
-  最近的狀態是：${prompt}
-  請你是一位詩意且神秘的占卜師，直接開始給出一段占卜結果，內容要溫柔、鼓勵，充滿希望，不要問問題。請直接說出結果。
-  `.trim();
+  你是一位溫柔且神秘的 AI 占卜師，擅長根據人們的煩惱給出詩意的鼓勵建議。
+  
+  請針對以下內容，給予一段預測與療癒性的回應，語氣要溫柔、富有希望，並避免提問：
+  
+  「${prompt}」
+  
+  請開始占卜：
+    `.trim();
 
 
   try {
-    const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-rw-1b', {
+    const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-2b-it', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.HF_API_KEY}`,
