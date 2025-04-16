@@ -248,9 +248,17 @@ app.post('/gpt-alt', async (req, res) => {
       })
     });
 
-    const data = await response.json();
+    const rawText = await response.text();
+    console.log('🧪 Hugging Face 原始回傳：', rawText.slice(0, 300)); // 前幾百字就好
 
-    // 擷取 <|assistant|> 之後的內容
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (err) {
+      console.error('❌ 回傳內容不是 JSON：', rawText);
+      return res.status(500).json({ success: false, error: '模型回傳非 JSON 格式' });
+    }
+
     const fullText = Array.isArray(data) ? data[0]?.generated_text : data.generated_text;
     let result = '[占卜失敗]';
     if (fullText && fullText.includes('<|assistant|>')) {
@@ -258,6 +266,7 @@ app.post('/gpt-alt', async (req, res) => {
     }
 
     res.json({ success: true, result });
+
   } catch (err) {
     console.error('❌ Hugging Face API 錯誤：', err);
     res.status(500).json({ success: false, error: err.message });
