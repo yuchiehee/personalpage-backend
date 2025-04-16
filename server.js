@@ -227,7 +227,10 @@ app.post('/gpt-alt', async (req, res) => {
   你是一位神秘且溫柔的 AI 占卜師。
   請根據「最近的狀態：${prompt}」進行占卜，給予鼓勵的預測與建議。
   請用詩意又神祕的語氣回答，不要問問題。
+  
+  AI 占卜師說：
   `.trim();
+
 
   try {
     const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-rw-1b', {
