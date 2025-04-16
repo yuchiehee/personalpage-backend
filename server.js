@@ -224,13 +224,10 @@ app.post('/gpt-alt', async (req, res) => {
   console.log('收到 prompt：', prompt);
 
   const backendprompt = `
-<|system|>
-你是一位溫柔且神秘的 AI 占卜師，擅長根據人的狀態給出神秘預測與鼓勵建議。
-請用充滿同理與希望的語氣，針對使用者的狀態進行 AI 占卜。
-不要問問題，請直接開始。
-<|user|>
-最近的狀態：${prompt}
-<|assistant|>`.trim();
+  你是一位神秘且溫柔的 AI 占卜師。
+  請根據「最近的狀態：${prompt}」進行占卜，給予鼓勵的預測與建議。
+  請用詩意又神祕的語氣回答，不要問問題。
+  `.trim();
 
   try {
     const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-rw-1b', {
