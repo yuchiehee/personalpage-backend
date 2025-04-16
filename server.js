@@ -224,13 +224,12 @@ app.post('/gpt-alt', async (req, res) => {
   console.log('收到 prompt：', prompt);
 
   const backendprompt = `
-  你是一位神秘且溫柔的 AI 占卜師。
-  請根據「最近的狀態：${prompt}」進行占卜，給予鼓勵的預測與建議。
-  請用詩意又神祕的語氣回答，不要問問題。
-  
-  AI 占卜師說：
-  `.trim();
+你是一位神秘且溫柔的 AI 占卜師。
+請根據「最近的狀態：${prompt}」進行占卜，給予鼓勵的預測與建議。
+請用詩意又神祕的語氣回答，不要問問題。
 
+AI 占卜師說：
+`.trim();
 
   try {
     const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-rw-1b', {
@@ -249,27 +248,37 @@ app.post('/gpt-alt', async (req, res) => {
     });
 
     const rawText = await response.text();
-    console.log('🧪 Hugging Face 原始回傳：', rawText.slice(0, 300)); // 前幾百字就好
+    console.log('🧪 Hugging Face 原始回傳：', rawText.slice(0, 300));
 
+    // 嘗試解析成 JSON
     let data;
     try {
       data = JSON.parse(rawText);
     } catch (err) {
-      console.error('❌ 回傳內容不是 JSON：', rawText);
-      return res.status(500).json({ success: false, error: '模型回傳非 JSON 格式' });
+      console.error('❌ 回傳不是 JSON：', rawText);
+      return res.json({ success: false, result: '📡 模型回傳異常，請稍候再試。' });
     }
 
+    // 處理模型忙碌錯誤
+    if (data.error?.includes('Model too busy')) {
+      console.warn('⚠️ 模型忙碌中');
+      return res.json({ success: false, result: '📡 模型忙碌中，請稍候再試。' });
+    }
+
+    // 擷取內容
     const fullText = Array.isArray(data) ? data[0]?.generated_text : data.generated_text;
     let result = '[占卜失敗]';
-    if (fullText && fullText.includes('<|assistant|>')) {
-      result = fullText.split('<|assistant|>')[1].trim();
+    if (fullText) {
+      result = fullText.includes('<|assistant|>')
+        ? fullText.split('<|assistant|>')[1].trim()
+        : fullText.trim();
     }
 
     res.json({ success: true, result });
 
   } catch (err) {
     console.error('❌ Hugging Face API 錯誤：', err);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, result: '⚠️ 無法連接占卜模型，請稍後再試。' });
   }
 });
 
