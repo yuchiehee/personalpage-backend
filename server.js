@@ -265,22 +265,6 @@ app.post('/gpt-alt', async (req, res) => {
 });
 
 
-    const data = await response.json();
-
-    // 判斷是否為正常格式
-    const result = Array.isArray(data)
-      ? data[0]?.generated_text
-      : data.generated_text || '[占卜失敗]';
-
-    res.json({ success: true, result });
-
-  } catch (err) {
-    console.error('❌ Hugging Face API 錯誤：', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-
 initDatabase().then(() => {
   app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
 });
