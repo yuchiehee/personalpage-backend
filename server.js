@@ -223,10 +223,18 @@ app.post('/gpt-alt', async (req, res) => {
   const { prompt } = req.body;
   console.log('收到 prompt：', prompt);
 
-  const backendprompt = `你是一位溫柔且神秘的 AI 占卜師，請根據下列資訊進行一段 AI 占卜：\n---\n最近的狀態：${prompt}\n\n請以鼓勵且神秘的語氣，預測使用者近期的運勢與建議，不要問問題，直接開始占卜內容。\n\nAI 占卜師說：`;
+  // prompt template 設定：讓回應有「神秘溫柔占卜師」語氣
+  const backendprompt = `
+  <|system|>
+  你是一位溫柔且神秘的 AI 占卜師，擅長根據人的狀態給出神秘預測與鼓勵建議。
+  請用充滿同理與希望的語氣，針對使用者的狀態進行 AI 占卜。
+  不要問問題，請直接開始。
+  <|user|>
+  最近的狀態：${prompt}
+  <|assistant|>`;
 
   try {
-    const response = await fetch('https://api-inference.huggingface.co/models/google/gemma-2b-it', {
+    const response = await fetch('https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-alpha', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.HF_API_KEY}`,
@@ -241,20 +249,15 @@ app.post('/gpt-alt', async (req, res) => {
       })
     });
 
-    // ⚠️ 檢查 content-type
-    const contentType = response.headers.get('content-type') || '';
-    if (!response.ok || !contentType.includes('application/json')) {
-      const text = await response.text(); // 印出錯誤頁內容
-      console.error('⚠️ 非預期的回應格式：', text.slice(0, 200));
-      return res.status(500).json({ success: false, error: 'Hugging Face 回應格式錯誤' });
-    }
-
     const data = await response.json();
+
+    // 判斷是否為正常格式
     const result = Array.isArray(data)
       ? data[0]?.generated_text
       : data.generated_text || '[占卜失敗]';
 
     res.json({ success: true, result });
+
   } catch (err) {
     console.error('❌ Hugging Face API 錯誤：', err);
     res.status(500).json({ success: false, error: err.message });
