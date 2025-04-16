@@ -241,6 +241,14 @@ app.post('/gpt-alt', async (req, res) => {
       })
     });
 
+    // ⚠️ 檢查 content-type
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok || !contentType.includes('application/json')) {
+      const text = await response.text(); // 印出錯誤頁內容
+      console.error('⚠️ 非預期的回應格式：', text.slice(0, 200));
+      return res.status(500).json({ success: false, error: 'Hugging Face 回應格式錯誤' });
+    }
+
     const data = await response.json();
     const result = Array.isArray(data)
       ? data[0]?.generated_text
@@ -252,6 +260,7 @@ app.post('/gpt-alt', async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 initDatabase().then(() => {
   app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
