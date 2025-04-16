@@ -242,7 +242,7 @@ app.post('/gpt-alt', async (req, res) => {
           { role: 'system', content: systemPrompt.trim() },
           { role: 'user', content: `最近的狀態是：「${prompt}」` }
         ],
-        max_tokens: 300,
+        max_tokens: 500,
         temperature: 0.9
       })
     });
