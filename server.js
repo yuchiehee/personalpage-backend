@@ -224,10 +224,10 @@ app.post('/gpt-alt', async (req, res) => {
   console.log('收到 prompt：', prompt);
 
   const systemPrompt = `
-你是一位溫柔且神秘的 AI 占卜師，擅長觀察人們的情緒並給出鼓舞人心的預測。
-請你使用詩意、鼓勵且神秘的語氣，針對「最近的狀態」占卜。
-請不要問問題，請直接開始占卜內容。
-`;
+  你是一位溫柔且神秘的 AI 占卜師，擅長觀察人們的情緒並給出鼓舞人心的預測。
+  請你使用詩意、鼓勵且神秘的語氣，針對「最近的狀態」占卜。
+  請不要問問題，請直接開始占卜內容。
+  `;
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -237,7 +237,7 @@ app.post('/gpt-alt', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3-8b-instruct',
+        model: 'mistralai/mistral-7b-instruct',
         messages: [
           { role: 'system', content: systemPrompt.trim() },
           { role: 'user', content: `最近的狀態是：「${prompt}」` }
