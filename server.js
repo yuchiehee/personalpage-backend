@@ -223,7 +223,7 @@ app.post('/gpt-alt', async (req, res) => {
   const { prompt } = req.body;
   console.log('收到 prompt：', prompt);
 
-  const backendPrompt = `
+  const backendprompt = `
   你是一位溫柔且神秘的 AI 占卜師，擅長根據使用者最近的情緒或遭遇給出富有詩意的預測與建議。
   請根據以下資訊開始占卜，不要問問題，直接給出建議與預測。
   ---
